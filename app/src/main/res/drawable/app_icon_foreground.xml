@@ -1,43 +1,47 @@
+<!--
+  Reef mark — three concentric arcs rising from a common centre.
+
+  Replaces the Jellyfin mark, which must not be an unofficial client's launcher
+  icon (docs/licensing.md). Jellyfin's own logo still appears on the boot screen,
+  where it describes what the app connects to rather than who wrote it.
+
+  Geometry notes, because adaptive icons are easy to get subtly wrong:
+
+  - The canvas is 108x108 but only the centre 72x72 is guaranteed visible; a
+    launcher may mask to a circle, squircle or rounded square and may parallax
+    the layer. Everything here stays inside x/y 18..90 INCLUDING half the stroke
+    width, which is the part people forget.
+  - Arcs are concentric rather than stacked. Stacked arcs at different centres
+    collapse into an unreadable blob once the icon is drawn at 48px.
+  - Stroke is 6.5 on a 108 canvas (~6%) — heavy on purpose. Thin strokes vanish
+    under TV gamma (docs/tv-constraints.md §9) and at launcher sizes.
+  - Colours are explicit, not interpolated: a straight RGB path from coral to
+    teal passes through a muddy grey. The middle stop is Jellyfin's own purple.
+-->
 <vector xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:aapt="http://schemas.android.com/aapt"
     android:width="108dp"
     android:height="108dp"
     android:viewportWidth="108"
     android:viewportHeight="108">
-    <path android:pathData="M47.45,59.31C46.59,57.58 52.24,47.33 54,47.33C55.76,47.33 61.4,57.6 60.55,59.31C59.7,61.02 48.31,61.04 47.45,59.31Z">
-        <aapt:attr name="android:fillColor">
-            <gradient
-                android:endX="74"
-                android:endY="67"
-                android:startX="40.67"
-                android:startY="48.67"
-                android:type="linear">
-                <item
-                    android:color="#FFAA5CC3"
-                    android:offset="0" />
-                <item
-                    android:color="#FF00A4DC"
-                    android:offset="1" />
-            </gradient>
-        </aapt:attr>
-    </path>
+
+    <!-- Outer arc, r=32 -->
     <path
-        android:fillType="evenOdd"
-        android:pathData="M34.27,68.11C31.67,62.89 48.71,32 54,32C59.3,32 76.31,62.95 73.74,68.11C71.17,73.27 36.87,73.33 34.27,68.11ZM41.08,63.58C42.78,67 65.25,66.96 66.94,63.58C68.62,60.2 57.47,39.92 54.01,39.92C50.54,39.92 39.37,60.16 41.08,63.58Z">
-        <aapt:attr name="android:fillColor">
-            <gradient
-                android:endX="74"
-                android:endY="67"
-                android:startX="40.67"
-                android:startY="48.67"
-                android:type="linear">
-                <item
-                    android:color="#FFAA5CC3"
-                    android:offset="0" />
-                <item
-                    android:color="#FF00A4DC"
-                    android:offset="1" />
-            </gradient>
-        </aapt:attr>
-    </path>
+        android:pathData="M22,66 A32,32 0 0 1 86,66"
+        android:strokeColor="#2AB7F0"
+        android:strokeWidth="6.5"
+        android:strokeLineCap="round" />
+
+    <!-- Middle arc, r=21.5 -->
+    <path
+        android:pathData="M32.5,66 A21.5,21.5 0 0 1 75.5,66"
+        android:strokeColor="#AA5CC3"
+        android:strokeWidth="6.5"
+        android:strokeLineCap="round" />
+
+    <!-- Inner arc, r=11 -->
+    <path
+        android:pathData="M43,66 A11,11 0 0 1 65,66"
+        android:strokeColor="#FF7A59"
+        android:strokeWidth="6.5"
+        android:strokeLineCap="round" />
 </vector>

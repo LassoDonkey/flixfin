@@ -17,6 +17,14 @@
     <!-- Search permissions (voice to text) -->
     <uses-permission android:name="android.permission.RECORD_AUDIO" />
 
+    <!--
+      Reef self-update. Required since API 26 for an app to trigger an install.
+      Declaring it is not sufficient — the user must additionally grant "install
+      unknown apps" to Reef, which ReefUpdater.canInstall() checks before
+      downloading anything. See docs/self-update.md.
+    -->
+    <uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES" />
+
     <!-- Device feature requirements -->
     <uses-feature
         android:name="android.software.leanback"
@@ -130,5 +138,16 @@
             android:windowSoftInputMode="adjustNothing" />
 
         <activity android:name=".ui.playback.ExternalPlayerActivity" />
+
+        <!--
+          Receives the result of a Reef self-update install session. Not exported:
+          only the system package installer targets it, via a PendingIntent we
+          created ourselves. Exporting it would let any app on the device forge
+          install-result broadcasts at us.
+        -->
+        <receiver
+            android:name=".reef.ReefUpdateReceiver"
+            android:enabled="true"
+            android:exported="false" />
     </application>
 </manifest>
