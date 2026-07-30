@@ -90,7 +90,7 @@ object ReefUpdater {
 				.firstNotNullOfOrNull { asset ->
 					val name = asset["name"]?.jsonPrimitive?.content
 					if (name?.endsWith(".apk") == true) {
-						asset["browser_download_url"]?.jsonPrimitive?.content
+						asset["browser_download_url"]?.jsonPrimitive?.content?.let(::pinToUpdateHost)
 					} else {
 						null
 					}
@@ -133,6 +133,33 @@ object ReefUpdater {
 
 		major * 1_000_000 + minor * 10_000 + patch * 100 + build
 	}.getOrDefault(0)
+
+	/**
+	 * Rewrites an asset URL to go through [UPDATE_HOST].
+	 *
+	 * Gitea builds `browser_download_url` from its own configured base URL, which
+	 * here is the MagicDNS name `odin.tail8da5e5.ts.net:3000` rather than the
+	 * `100.x` address. That works only while MagicDNS is resolving on the device —
+	 * it is on by default, but it is a setting, and a Fire TV with it off would
+	 * fail every download while the version check kept succeeding. A silent,
+	 * intermittent update failure is a miserable thing to debug from the sofa.
+	 *
+	 * Pinning the host also closes a smaller hole: without it, the file we fetch
+	 * is wherever the server's config points, not necessarily the host we decided
+	 * to trust. Path and query are preserved; only scheme/host/port are replaced.
+	 *
+	 * Falls back to the original URL if it cannot be parsed, so a Gitea upgrade
+	 * that changes the URL shape degrades to "might work" rather than "definitely
+	 * broken".
+	 */
+	private fun pinToUpdateHost(url: String): String = runCatching {
+		val parsed = URL(url)
+		val suffix = buildString {
+			append(parsed.path)
+			parsed.query?.let { append("?").append(it) }
+		}
+		"$UPDATE_HOST$suffix"
+	}.getOrDefault(url)
 
 	private fun fetch(url: String): String? {
 		val connection = (URL(url).openConnection() as HttpURLConnection).apply {
