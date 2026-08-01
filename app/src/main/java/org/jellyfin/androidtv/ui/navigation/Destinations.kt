@@ -12,6 +12,7 @@ import org.jellyfin.androidtv.ui.browsing.CollectionFragment
 import org.jellyfin.androidtv.ui.browsing.GenericFolderFragment
 import org.jellyfin.androidtv.ui.browsing.SuggestedMoviesFragment
 import org.jellyfin.androidtv.flixfin.home.FlixFinHomeFragment
+import org.jellyfin.androidtv.flixfin.detail.FlixFinDetailFragment
 import org.jellyfin.androidtv.ui.itemdetail.FullDetailsFragment
 import org.jellyfin.androidtv.ui.itemdetail.ItemListFragment
 import org.jellyfin.androidtv.ui.itemdetail.MusicFavoritesListFragment
@@ -88,7 +89,12 @@ object Destinations {
 		}
 
 	// Item details
-	fun itemDetails(item: UUID) = fragmentDestination<FullDetailsFragment> {
+	/*
+	 * FlixFin's detail page. Upstream's FullDetailsFragment reads the same
+	 * "ItemId" extra and is left compiling, so swapping the class named here is
+	 * the whole switch — and the way back if ours misbehaves.
+	 */
+	fun itemDetails(item: UUID) = fragmentDestination<FlixFinDetailFragment> {
 		putString("ItemId", item.toString())
 	}
 
