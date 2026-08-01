@@ -230,8 +230,18 @@ fun FlixFinHomeScreen(
 			},
 	) {
 		Column(modifier = Modifier.fillMaxSize()) {
-			Spacer(Modifier.height(Dimens.SafeY + Dimens.TopNavHeight))
-
+			/*
+			 * No spacer above the hero. There used to be one, reserving the height of
+			 * the top strip, and it put a hard-edged black band across the top of
+			 * every backdrop — the artwork started BELOW the nav instead of running
+			 * underneath it.
+			 *
+			 * The nav is an overlay, not a row in a column. Prime's hero runs to the
+			 * very top of the panel with the strip floating on it; the strip earns
+			 * its legibility from a gradient, not from a reserved block of
+			 * background. The hero's own content is bottom-aligned, so nothing
+			 * collides with the bar.
+			 */
 			FlixFinHero(
 				title = heroItem?.name.orEmpty(),
 				logoUrl = heroItem?.let { imageUrl(it, ImageKind.Logo) },

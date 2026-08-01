@@ -16,6 +16,7 @@ import androidx.lifecycle.lifecycleScope
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import org.jellyfin.androidtv.flixfin.ui.FlixFinLoading
 import org.jellyfin.androidtv.flixfin.ui.FlixFinText
 import org.jellyfin.androidtv.flixfin.ui.FlixFinTheme.Colors
 import org.jellyfin.androidtv.flixfin.ui.FlixFinTheme.Type
@@ -63,17 +64,16 @@ class FlixFinHomeFragment : Fragment() {
 				.background(Colors.Background),
 		) {
 			when (val current = state) {
-				is FlixFinHomeState.Loading -> {
-					/*
-					 * Deliberately nothing.
-					 *
-					 * A placeholder that appears and is replaced within a couple of
-					 * frames reads as the screen glitching, and on a warm cache the
-					 * library is back in well under the time it takes to notice. The
-					 * background is already the right colour, so an empty frame here is
-					 * indistinguishable from the app simply being fast.
-					 */
-				}
+				/*
+				 * A branded loading screen, not an empty frame.
+				 *
+				 * This used to render nothing, on the reasoning that a placeholder
+				 * appearing and vanishing within a couple of frames reads as a glitch.
+				 * That holds for a warm cache and falls apart on a cold start over a
+				 * network, where it left the screen black long enough to look broken -
+				 * which is worse than a brief flicker.
+				 */
+				is FlixFinHomeState.Loading -> FlixFinLoading()
 
 				is FlixFinHomeState.Empty -> FlixFinText(
 					text = "Nothing to show yet. Check the server has a library.",

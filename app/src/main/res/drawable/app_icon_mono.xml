@@ -1,19 +1,15 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!--
-  Monochrome silhouette of the mark, for the playback notification.
+  Monochrome silhouette, for the playback notification.
 
-  A notification small icon is NOT a small version of the launcher icon: Android
-  discards colour entirely and tints the alpha channel, so anything with shading
-  arrives as a solid blob. FlixFin's mark is a metal gradient with a striped
-  clapper, which is exactly that failure case — which is why this is a separate,
-  deliberately flat drawing rather than a reference to the app icon.
+  A notification small icon is NOT a small launcher icon: Android discards colour
+  and tints the alpha channel, so anything with a plate or a fill arrives as a
+  solid blob. This draws only the two shapes that carry the identity - the
+  clapper arm and the play triangle - with the notch punched through by evenOdd
+  so it stays visible after tinting.
 
-  Drawn as ONE path with evenOdd fill, so the play triangle is a hole punched
-  through the body rather than a second shape painted over it. Painted over, it
-  would be tinted the same colour as the body and vanish.
-
-  24dp viewport, which is the size this is actually rasterised at. Detail beyond
-  three shapes does not survive.
+  24dp viewport, which is what this is rasterised at. Detail beyond two shapes
+  does not survive.
 -->
 <vector xmlns:android="http://schemas.android.com/apk/res/android"
     android:width="24dp"
@@ -24,5 +20,5 @@
     <path
         android:fillColor="#FFFFFF"
         android:fillType="evenOdd"
-        android:pathData="M3.6,4.3 L20.4,6.9 L20.0,9.0 L3.2,6.4 Z M4,9.6 H20 A0.9,0.9 0 0 1 20.9,10.5 V19.1 A0.9,0.9 0 0 1 20,20 H4 A0.9,0.9 0 0 1 3.1,19.1 V10.5 A0.9,0.9 0 0 1 4,9.6 Z M10.2,12.2 L16.2,14.8 L10.2,17.4 Z" />
+        android:pathData="M2.8,7.0 L21.2,4.1 L21.2,7.9 L2.8,10.8 Z M10.0,6.0 L12.6,5.6 L11.1,9.2 L8.5,9.6 Z M9.2,12.6 L16.8,16.5 L9.2,20.4 Z" />
 </vector>

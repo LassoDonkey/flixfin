@@ -88,20 +88,36 @@ fun FlixFinTopNav(
 		 * strip above the bar is inside the overscan margin and leaving it clear
 		 * would let a card show through above the nav.
 		 */
-		if (scrolled) {
-			Box(
-				modifier = Modifier
-					.fillMaxWidth()
-					.height(Dimens.SafeY + Dimens.TopNavHeight + 24.dp)
-					.background(
-						Brush.verticalGradient(
-							0f to Colors.Background,
-							0.55f to Colors.Background,
-							1f to Color.Transparent,
-						)
+		/*
+		 * A scrim under the bar, ALWAYS, not only once scrolled.
+		 *
+		 * The bar floats on the hero artwork now rather than sitting on a reserved
+		 * block of background, so it needs something to be legible against at the
+		 * top of the page too — a bright sky behind "TV shows" is the same problem
+		 * as a bright card behind it.
+		 *
+		 * A gradient rather than a band. A solid rectangle with a crisp bottom edge
+		 * across 1920px is exactly the hard cut this replaced; the whole point is
+		 * that the artwork should keep going and simply be darker where the labels
+		 * are.
+		 *
+		 * Stronger when scrolled, because a row of cards underneath is busier than
+		 * the top of a backdrop and needs more help.
+		 */
+		val top = if (scrolled) 0.92f else 0.72f
+		Box(
+			modifier = Modifier
+				.fillMaxWidth()
+				.height(Dimens.SafeY + Dimens.TopNavHeight + 40.dp)
+				.background(
+					Brush.verticalGradient(
+						0f to Colors.BackgroundDeep.copy(alpha = top),
+						0.45f to Colors.BackgroundDeep.copy(alpha = top * 0.72f),
+						0.78f to Colors.BackgroundDeep.copy(alpha = top * 0.28f),
+						1f to Color.Transparent,
 					)
-			)
-		}
+				)
+		)
 
 		Row(
 			modifier = Modifier
