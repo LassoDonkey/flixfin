@@ -11,6 +11,9 @@ import coil3.network.okhttp.OkHttpNetworkFetcherFactory
 import coil3.serviceLoaderEnabled
 import coil3.svg.SvgDecoder
 import coil3.util.Logger
+import org.jellyfin.androidtv.flixfin.home.FlixFinHomeRepository
+import org.jellyfin.androidtv.flixfin.home.FlixFinHomeViewModel
+import org.jellyfin.androidtv.flixfin.home.FlixFinImages
 import org.jellyfin.androidtv.BuildConfig
 import org.jellyfin.androidtv.auth.repository.ServerRepository
 import org.jellyfin.androidtv.auth.repository.UserRepository
@@ -168,6 +171,12 @@ val appModule = module {
 	viewModel { DreamViewModel(get(), get(), get(), get(), get()) }
 	viewModel { SettingsViewModel() }
 	viewModel { SettingsLibrariesScreenViewModel(get()) }
+
+	// FlixFin. Kept together and at the end so a rebase onto upstream sees one
+	// contiguous block rather than edits interleaved through their registrations.
+	single { FlixFinHomeRepository(get()) }
+	single { FlixFinImages(get()) }
+	viewModel { FlixFinHomeViewModel(get()) }
 
 	single { BackgroundService(get(), get(), get(), get(), get()) }
 

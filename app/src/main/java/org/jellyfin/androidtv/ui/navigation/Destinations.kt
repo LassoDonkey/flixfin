@@ -11,7 +11,7 @@ import org.jellyfin.androidtv.ui.browsing.ByLetterFragment
 import org.jellyfin.androidtv.ui.browsing.CollectionFragment
 import org.jellyfin.androidtv.ui.browsing.GenericFolderFragment
 import org.jellyfin.androidtv.ui.browsing.SuggestedMoviesFragment
-import org.jellyfin.androidtv.ui.home.HomeFragment
+import org.jellyfin.androidtv.flixfin.home.FlixFinHomeFragment
 import org.jellyfin.androidtv.ui.itemdetail.FullDetailsFragment
 import org.jellyfin.androidtv.ui.itemdetail.ItemListFragment
 import org.jellyfin.androidtv.ui.itemdetail.MusicFavoritesListFragment
@@ -32,7 +32,14 @@ import java.util.UUID
 @Suppress("TooManyFunctions")
 object Destinations {
 	// General
-	val home = fragmentDestination<HomeFragment>()
+	/*
+	 * FlixFin's home screen, not upstream's.
+	 *
+	 * This one line is the entire hook. Upstream's HomeFragment is left in place
+	 * and untouched — it still compiles, and pointing this back at it is how you
+	 * A/B the two or fall back if something is wrong with ours.
+	 */
+	val home = fragmentDestination<FlixFinHomeFragment>()
 	fun search(query: String? = null) = fragmentDestination<SearchFragment> {
 		putString(SearchFragment.EXTRA_QUERY, query)
 	}
