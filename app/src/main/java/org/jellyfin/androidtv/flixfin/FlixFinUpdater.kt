@@ -17,7 +17,7 @@ import java.net.HttpURLConnection
 import java.net.URL
 
 /**
- * Self-update against the Gitea release feed.
+ * Self-update against the GitHub release feed.
  *
  * FlixFin is sideloaded — there is no store to push updates through, and walking to
  * the telly with a laptop and `adb` every time is exactly the friction this is
@@ -46,7 +46,7 @@ import java.net.URL
  */
 object FlixFinUpdater {
 	/*
-	 * GitHub Releases, not the tailnet Gitea.
+	 * GitHub Releases.
 	 *
 	 * It used to point at a private Tailscale address over plain HTTP, which meant
 	 * a TV not on that tailnet passed the version check and then failed every
@@ -96,7 +96,7 @@ object FlixFinUpdater {
 			val body = fetch(RELEASES_URL) ?: return@runCatching null
 			val release = json.parseToJsonElement(body) as? JsonObject ?: return@runCatching null
 
-			// Gitea tags releases "v1.2.3"; upstream's version scheme drops the v.
+			// Releases are tagged "v1.2.3"; upstream's version scheme drops the v.
 			val tag = release["tag_name"]?.jsonPrimitive?.content?.removePrefix("v")
 				?: return@runCatching null
 			val notes = release["body"]?.jsonPrimitive?.content.orEmpty()
