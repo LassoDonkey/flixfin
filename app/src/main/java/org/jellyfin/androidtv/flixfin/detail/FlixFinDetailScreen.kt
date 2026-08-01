@@ -188,8 +188,19 @@ fun FlixFinDetailScreen(
 			modifier = Modifier.fillMaxSize(),
 		)
 
-		// Directional scrim, same as the home hero. The copy column is sized to
-		// stay inside it.
+		/*
+		 * TWO scrims, and the vertical one is not optional.
+		 *
+		 * The first build on hardware had only the horizontal one, and it looked
+		 * fine in the head and fell apart below it: the cast strip and the
+		 * "more like this" row sat on full-brightness artwork, with grey role text
+		 * over a lit Spider-Man. The horizontal scrim protects the copy COLUMN,
+		 * which is a different problem from protecting the lower half of the page.
+		 *
+		 * Unlike the home screen, this page shows everything at once rather than
+		 * scrolling a long list, so "fade it out once you scroll" never engages for
+		 * a short page. The artwork has to hand off by position, not by state.
+		 */
 		Box(
 			modifier = Modifier
 				.fillMaxSize()
@@ -198,6 +209,22 @@ fun FlixFinDetailScreen(
 						0f to Colors.BackgroundDeep.copy(alpha = 0.92f),
 						0.34f to Colors.BackgroundDeep.copy(alpha = 0.6f),
 						0.58f to Color.Transparent,
+					)
+				)
+		)
+
+		Box(
+			modifier = Modifier
+				.fillMaxSize()
+				.background(
+					Brush.verticalGradient(
+						// Clear at the top so the banner is still the banner.
+						0f to Color.Transparent,
+						0.30f to Colors.BackgroundDeep.copy(alpha = 0.35f),
+						// By the cast strip it is background, not artwork.
+						0.52f to Colors.BackgroundDeep.copy(alpha = 0.88f),
+						0.66f to Colors.BackgroundDeep,
+						1f to Colors.BackgroundDeep,
 					)
 				)
 		)
