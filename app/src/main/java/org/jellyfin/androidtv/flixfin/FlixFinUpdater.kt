@@ -48,14 +48,13 @@ object FlixFinUpdater {
 	/*
 	 * GitHub Releases, not the tailnet Gitea.
 	 *
-	 * It used to point at `http://100.101.42.43:3000`, a Tailscale address, which
-	 * meant a TV not on the tailnet passed the check and then failed every
+	 * It used to point at a private Tailscale address over plain HTTP, which meant
+	 * a TV not on that tailnet passed the version check and then failed every
 	 * download — silently, because a failed check is deliberately swallowed so
 	 * startup never hangs. Anyone the APK was sent to would sit on an old build
 	 * forever with nothing on screen to say so.
 	 *
-	 * GitHub also removes a private address from a public repository, and it is
-	 * HTTPS rather than plaintext HTTP.
+	 * GitHub is reachable from anywhere and is HTTPS.
 	 *
 	 * Still a hardcoded constant, and that part is not negotiable: if the update
 	 * host were configurable, anything able to write config could point the
@@ -155,11 +154,10 @@ object FlixFinUpdater {
 	/*
 	 * `pinToUpdateHost` is gone with the move to GitHub.
 	 *
-	 * It existed because Gitea returns `browser_download_url` using its MagicDNS
-	 * name (`odin.tail8da5e5.ts.net`) rather than the 100.x address, so a TV with
-	 * MagicDNS off passed the version check and then failed every download — a
-	 * silent, intermittent failure that was horrible to diagnose from the sofa,
-	 * and the entire reason v1.0.1 existed.
+	 * It existed because the previous host returned `browser_download_url` on a
+	 * name that only resolved inside the private network, so a client without that
+	 * name resolution passed the version check and then failed every download — a
+	 * silent, intermittent failure that was horrible to diagnose from the sofa.
 	 *
 	 * GitHub serves asset URLs on its own public hostnames, which resolve
 	 * everywhere. Rewriting them would break the download rather than fix it.
