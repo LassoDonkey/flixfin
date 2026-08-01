@@ -1,77 +1,87 @@
-<h1 align="center">Jellyfin for Android TV</h1>
-<h3 align="center">Part of the <a href="https://jellyfin.org">Jellyfin Project</a></h3>
+# FlixFin
+
+An unofficial Jellyfin client for Fire TV and Android TV.
+
+**Not affiliated with, endorsed by, or supported by the Jellyfin project.** This
+is a third-party client that connects to a Jellyfin server. For the official
+Android TV client, see
+[jellyfin/jellyfin-androidtv](https://github.com/jellyfin/jellyfin-androidtv) —
+please do not raise FlixFin issues there.
 
 ---
 
-<p align="center">
-<img alt="Logo banner" src="https://raw.githubusercontent.com/jellyfin/jellyfin-ux/master/branding/SVG/banner-logo-solid.svg?sanitize=true"/>
-<br/><br/>
-<a href="https://github.com/jellyfin/jellyfin-androidtv">
-<img alt="GPL 2.0 License" src="https://img.shields.io/github/license/jellyfin/jellyfin-androidtv.svg"/>
-</a>
-<a href="https://github.com/jellyfin/jellyfin-androidtv/releases">
-<img alt="Current Release" src="https://img.shields.io/github/release/jellyfin/jellyfin-androidtv.svg"/>
-</a>
-<a href="https://translate.jellyfin.org/projects/jellyfin-android/jellyfin-androidtv/">
-<img alt="Translation Status" src="https://translate.jellyfin.org/widgets/jellyfin-android/-/jellyfin-androidtv/svg-badge.svg"/>
-</a>
-<br/>
-<a href="https://opencollective.com/jellyfin">
-<img alt="Donate" src="https://img.shields.io/opencollective/all/jellyfin.svg?label=backers"/>
-</a>
-<a href="https://features.jellyfin.org">
-<img alt="Feature Requests" src="https://img.shields.io/badge/fider-vote%20on%20features-success.svg"/>
-</a>
-<a href="https://matrix.to/#/+jellyfin:matrix.org">
-<img alt="Chat on Matrix" src="https://img.shields.io/matrix/jellyfin:matrix.org.svg?logo=matrix"/>
-</a>
-<br/>
-<a href="https://play.google.com/store/apps/details?id=org.jellyfin.androidtv">
-<img width="153" alt="Jellyfin on Google Play" src="https://jellyfin.org/images/store-icons/google-play.png"/>
-</a>
-<a href="https://www.amazon.com/gp/aw/d/B07TX7Z725">
-<img width="153" alt="Jellyfin on Amazon Appstore" src="https://jellyfin.org/images/store-icons/amazon.png"/>
-</a>
-<a href="https://f-droid.org/en/packages/org.jellyfin.androidtv/">
-<img width="153" alt="Jellyfin on F-Droid" src="https://jellyfin.org/images/store-icons/fdroid.png"/>
-</a>
-<br/>
-<a href="https://repo.jellyfin.org/releases/client/androidtv/">Download archive</a>
-</p>
+## What this is
 
-Jellyfin for Android TV is a Jellyfin client for Android TV, Nvidia Shield, and Amazon Fire TV devices. We welcome all contributions and pull
-requests! If you have a larger feature in mind please open an issue so we can discuss the implementation before you start. 
+A fork of `jellyfin-androidtv`, with:
+
+- its own name, launcher icon and TV banner
+- its own `applicationId`, so it installs **alongside** the official client
+  rather than replacing it
+- in-app updates: it checks GitHub Releases on startup and can install a newer
+  version itself
+
+Everything else — playback, transcoding, subtitles, device profiles, Quick
+Connect — is upstream's, and upstream's is very good. Their player carries a
+custom FFmpeg decoder for DTS and TrueHD and a libass binding for styled
+subtitles, neither of which Media3 does on its own. The parts worth keeping are
+exactly the parts this fork does not touch.
+
+## Install
+
+Fire TV needs **Settings → My Fire TV → Developer Options** with **ADB
+debugging** and **Apps from Unknown Sources** both on.
+
+```bash
+adb connect <fire-tv-ip>:5555      # accept the prompt on the TV
+adb install -r flixfin-v1.1.0-release.apk
+```
+
+The APK is on the [Releases](../../releases) page.
+
+## Updating
+
+After the first install, updates are in-app: FlixFin checks
+`api.github.com/repos/LassoDonkey/flixfin/releases/latest` on startup and offers
+to install anything newer. The check has a short timeout and fails silently — an
+update check is never worth delaying the home screen for.
+
+The update host is a compile-time constant, not a setting. If it were
+configurable, anything able to write config could point the updater at an APK of
+its choosing, which turns a convenience feature into a remote code execution
+path. Android's own signature check is the backstop: an update installs only if
+it is signed with the same key as the installed app.
 
 ## Building
 
-The app uses Gradle and requires the Android SDK. We recommend using Android Studio, which includes all required dependencies, for
-development and building. For manual building without Android Studio make sure a compatible JDK and Android SDK are installed and in your
-PATH, then use the Gradle wrapper (`./gradlew`) to build the project with the `assembleDebug` Gradle task to generate an apk file:
+```bash
+export JAVA_HOME=/path/to/jdk-21
+export ANDROID_HOME=/path/to/android-sdk
 
-```shell
-./gradlew assembleDebug
+./gradlew -Pjellyfin.version=1.1.0 :app:assembleRelease
 ```
 
-The task will create an APK file in the `/app/build/outputs/apk/debug` directory. This APK file uses a different app-id from our stable
-builds and can be manually installed to your device.
+Release builds need signing config in `~/.gradle/gradle.properties`:
 
-## Branching
+```properties
+keystore.file=/path/to/your.p12
+keystore.password=...
+signing.key.alias=...
+signing.key.password=...
+```
 
-The `master` branch is the primary development branch and the target for all pull requests. It is **unstable** and may contain breaking
-changes or unresolved bugs. For production deployments and forks, always use the latest `release-x.y.z` branch. Do not base production work
-or long-lived forks on `master`.
+Debug builds need none of that and install alongside release builds — the debug
+`applicationId` carries a `.debug` suffix.
 
-Release branches are created at the start of a beta cycle and are kept up to date with each published release. Maintainers will cherry-pick
-selected changes into release branches as needed for backports. These branches are reused for subsequent patch releases.
+See [`FLIXFIN.md`](FLIXFIN.md) for what the fork changes and why.
 
-## Translating
+## Licence
 
-Translations can be improved very easily from our [Weblate](https://translate.jellyfin.org/projects/jellyfin-android/jellyfin-androidtv)
-instance. Look through the following graphic to see if your native language could use some work! We cannot accept changes to translation
-files via pull requests.
+**GPL-2.0-only**, inherited from `jellyfin-androidtv`. No "or later" wording
+appears in upstream, so relicensing is not available.
 
-<p align="center">
-<a href="https://translate.jellyfin.org/engage/jellyfin-android/">
-<img alt="Detailed Translation Status" src="https://translate.jellyfin.org/widgets/jellyfin-android/-/jellyfin-androidtv/multi-auto.svg"/>
-</a>
-</p>
+If you were given a FlixFin APK, you are entitled to its corresponding source,
+and this repository is it.
+
+The Jellyfin name and logo belong to the Jellyfin project; its brand assets are
+CC BY-SA 4.0. FlixFin uses none of them in its own branding, and states in-app
+that it is an unofficial client.

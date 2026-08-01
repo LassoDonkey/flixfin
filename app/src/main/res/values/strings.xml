@@ -1,13 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources xmlns:tools="http://schemas.android.com/tools" tools:ignore="MissingTranslation">
-    <string name="app_name_release" translatable="false" tools:ignore="UnusedResources">Reef</string>
-    <string name="app_name_debug" translatable="false" tools:ignore="UnusedResources">Reef Debug</string>
+    <string name="app_name_release" translatable="false" tools:ignore="UnusedResources">FlixFin</string>
+    <string name="app_name_debug" translatable="false" tools:ignore="UnusedResources">FlixFin Debug</string>
     <!--
       Required by the Jellyfin trademark convention this project follows: an
       unofficial client must not imply endorsement. See docs/licensing.md.
       Surfaced in the about screen; do not delete it to save space.
     -->
-    <string name="app_unofficial_notice" translatable="false">Reef is an unofficial third-party client. It is not affiliated with or endorsed by the Jellyfin project. Jellyfin is free software; Reef is a fork of jellyfin-androidtv, licensed GPL-2.0. Jellyfin logo © the Jellyfin contributors, CC BY-SA 4.0.</string>
+    <string name="app_unofficial_notice" translatable="false">FlixFin is an unofficial third-party client. It is not affiliated with or endorsed by the Jellyfin project. Jellyfin is free software; FlixFin is a fork of jellyfin-androidtv, licensed GPL-2.0. Jellyfin logo © the Jellyfin contributors, CC BY-SA 4.0.</string>
     <string name="video_error_unknown_error">Failed to load video</string>
     <string name="loading">Loading…</string>
     <string name="btn_cancel">Cancel</string>

@@ -1,8 +1,18 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!--
+  Shown where artwork is missing.
+
+  Points at @mipmap/app_icon_fg because the vector foreground it used to
+  reference is gone: FlixFin's mark has a metal gradient and a striped clapper,
+  which does not survive conversion to an Android vector drawable, so the
+  adaptive icon's foreground is a bitmap now. Left dangling this would have been
+  a build failure at resource-link time — worth knowing it is the only other
+  reference.
+-->
 <layer-list xmlns:android="http://schemas.android.com/apk/res/android">
     <item
         android:bottom="100dp"
-        android:drawable="@drawable/app_icon_foreground"
+        android:drawable="@mipmap/app_icon_fg"
         android:left="100dp"
         android:right="100dp"
         android:top="100dp" />

@@ -1,4 +1,4 @@
-package org.jellyfin.androidtv.reef
+package org.jellyfin.androidtv.flixfin
 
 import android.content.Context
 import android.content.Intent
@@ -19,7 +19,7 @@ import java.net.URL
 /**
  * Self-update against the Gitea release feed.
  *
- * Reef is sideloaded — there is no store to push updates through, and walking to
+ * FlixFin is sideloaded — there is no store to push updates through, and walking to
  * the telly with a laptop and `adb` every time is exactly the friction this is
  * meant to remove. So the app checks a release feed, downloads the APK and hands
  * it to Android's own installer.
@@ -28,29 +28,47 @@ import java.net.URL
  * does not apply — but everything Play is protecting against is real, hence the
  * constraints below.
  *
- * ## Why plain HTTP is acceptable here, when it normally is not
+ * ## Transport and trust
  *
- * [UPDATE_HOST] is a Tailscale address. Every byte between this TV and the Gitea
- * box is inside a WireGuard tunnel: encrypted, and the peer is cryptographically
- * authenticated by its node key. An attacker cannot reach that address without
- * already being on the tailnet.
+ * [API_HOST] is HTTPS, so the feed and the download are both authenticated in
+ * transport. This used to be plain HTTP to a Tailscale address, which was
+ * defensible — every byte was inside a WireGuard tunnel with a cryptographically
+ * authenticated peer — but only for TVs on that tailnet, and it put a private
+ * address in a public repository.
  *
- * That is the threat HTTPS would be mitigating, and it is already mitigated a
- * layer down. The backstop is Android itself: an update only installs if it is
- * signed with the same key as the installed app, so even a swapped APK cannot
- * replace Reef. See docs/networking.md and docs/self-update.md.
+ * The backstop is Android itself, and it is the one that actually matters: an
+ * update installs only if it is signed with the same key as the installed app,
+ * so even a substituted APK cannot replace FlixFin. See docs/self-update.md.
  *
  * The host is a hardcoded constant on purpose. If it were configurable, anything
  * that could write config could point the updater at an APK of its choosing —
  * which turns a convenience feature into a remote code execution path.
  */
-object ReefUpdater {
-	/** Tailnet address of the Gitea instance. Not configurable — see class docs. */
-	private const val UPDATE_HOST = "http://100.101.42.43:3000"
+object FlixFinUpdater {
+	/*
+	 * GitHub Releases, not the tailnet Gitea.
+	 *
+	 * It used to point at `http://100.101.42.43:3000`, a Tailscale address, which
+	 * meant a TV not on the tailnet passed the check and then failed every
+	 * download — silently, because a failed check is deliberately swallowed so
+	 * startup never hangs. Anyone the APK was sent to would sit on an old build
+	 * forever with nothing on screen to say so.
+	 *
+	 * GitHub also removes a private address from a public repository, and it is
+	 * HTTPS rather than plaintext HTTP.
+	 *
+	 * Still a hardcoded constant, and that part is not negotiable: if the update
+	 * host were configurable, anything able to write config could point the
+	 * updater at an APK of its choosing, which turns a convenience feature into a
+	 * remote code execution path. The signature check is the backstop — Android
+	 * refuses an update not signed with the installed app's key — but the host
+	 * should never have been the weak link in the first place.
+	 */
+	private const val API_HOST = "https://api.github.com"
 	private const val REPO_OWNER = "LassoDonkey"
-	private const val REPO_NAME = "reef-tv"
+	private const val REPO_NAME = "flixfin"
 
-	private const val RELEASES_URL = "$UPDATE_HOST/api/v1/repos/$REPO_OWNER/$REPO_NAME/releases/latest"
+	private const val RELEASES_URL = "$API_HOST/repos/$REPO_OWNER/$REPO_NAME/releases/latest"
 
 	/**
 	 * Short. A TV that is off the tailnet must not make startup hang while it
@@ -90,7 +108,7 @@ object ReefUpdater {
 				.firstNotNullOfOrNull { asset ->
 					val name = asset["name"]?.jsonPrimitive?.content
 					if (name?.endsWith(".apk") == true) {
-						asset["browser_download_url"]?.jsonPrimitive?.content?.let(::pinToUpdateHost)
+						asset["browser_download_url"]?.jsonPrimitive?.content
 					} else {
 						null
 					}
@@ -98,15 +116,15 @@ object ReefUpdater {
 
 			val remoteCode = versionCodeOf(tag)
 			if (remoteCode <= BuildConfig.VERSION_CODE) {
-				Timber.i("Reef is up to date (local=${BuildConfig.VERSION_CODE}, remote=$remoteCode)")
+				Timber.i("FlixFin is up to date (local=${BuildConfig.VERSION_CODE}, remote=$remoteCode)")
 				return@runCatching null
 			}
 
-			Timber.i("Reef update available: $tag (code $remoteCode)")
+			Timber.i("FlixFin update available: $tag (code $remoteCode)")
 			Update(tag, remoteCode, apkUrl, notes)
 		}.onFailure { error ->
 			// Expected whenever the TV is off the tailnet. Log, never surface.
-			Timber.d(error, "Reef update check failed")
+			Timber.d(error, "FlixFin update check failed")
 		}.getOrNull()
 	}
 
@@ -134,33 +152,18 @@ object ReefUpdater {
 		major * 1_000_000 + minor * 10_000 + patch * 100 + build
 	}.getOrDefault(0)
 
-	/**
-	 * Rewrites an asset URL to go through [UPDATE_HOST].
+	/*
+	 * `pinToUpdateHost` is gone with the move to GitHub.
 	 *
-	 * Gitea builds `browser_download_url` from its own configured base URL, which
-	 * here is the MagicDNS name `odin.tail8da5e5.ts.net:3000` rather than the
-	 * `100.x` address. That works only while MagicDNS is resolving on the device —
-	 * it is on by default, but it is a setting, and a Fire TV with it off would
-	 * fail every download while the version check kept succeeding. A silent,
-	 * intermittent update failure is a miserable thing to debug from the sofa.
+	 * It existed because Gitea returns `browser_download_url` using its MagicDNS
+	 * name (`odin.tail8da5e5.ts.net`) rather than the 100.x address, so a TV with
+	 * MagicDNS off passed the version check and then failed every download — a
+	 * silent, intermittent failure that was horrible to diagnose from the sofa,
+	 * and the entire reason v1.0.1 existed.
 	 *
-	 * Pinning the host also closes a smaller hole: without it, the file we fetch
-	 * is wherever the server's config points, not necessarily the host we decided
-	 * to trust. Path and query are preserved; only scheme/host/port are replaced.
-	 *
-	 * Falls back to the original URL if it cannot be parsed, so a Gitea upgrade
-	 * that changes the URL shape degrades to "might work" rather than "definitely
-	 * broken".
+	 * GitHub serves asset URLs on its own public hostnames, which resolve
+	 * everywhere. Rewriting them would break the download rather than fix it.
 	 */
-	private fun pinToUpdateHost(url: String): String = runCatching {
-		val parsed = URL(url)
-		val suffix = buildString {
-			append(parsed.path)
-			parsed.query?.let { append("?").append(it) }
-		}
-		"$UPDATE_HOST$suffix"
-	}.getOrDefault(url)
-
 	private fun fetch(url: String): String? {
 		val connection = (URL(url).openConnection() as HttpURLConnection).apply {
 			connectTimeout = CONNECT_TIMEOUT_MS
@@ -194,7 +197,7 @@ object ReefUpdater {
 		onProgress: (Float) -> Unit = {},
 	): File? = withContext(Dispatchers.IO) {
 		runCatching {
-			val target = File(context.cacheDir, "reef-update-${update.versionCode}.apk")
+			val target = File(context.cacheDir, "flixfin-update-${update.versionCode}.apk")
 			if (target.exists()) target.delete()
 
 			val connection = (URL(update.apkUrl).openConnection() as HttpURLConnection).apply {
@@ -227,17 +230,17 @@ object ReefUpdater {
 				connection.disconnect()
 			}
 
-			Timber.i("Downloaded Reef update to $target (${target.length()} bytes)")
+			Timber.i("Downloaded FlixFin update to $target (${target.length()} bytes)")
 			target
 		}.onFailure { error ->
-			Timber.w(error, "Reef update download failed")
+			Timber.w(error, "FlixFin update download failed")
 		}.getOrNull()
 	}
 
 	/**
 	 * True when this app is allowed to trigger an install.
 	 *
-	 * Since API 26 the user must grant "install unknown apps" to Reef
+	 * Since API 26 the user must grant "install unknown apps" to FlixFin
 	 * specifically — declaring REQUEST_INSTALL_PACKAGES is not enough. Check this
 	 * BEFORE downloading, or the app pulls 50MB over TV Wi-Fi and then dead-ends
 	 * on a permission screen.
@@ -266,7 +269,7 @@ object ReefUpdater {
 	 *
 	 * The system shows its own confirmation, which is navigable with a D-pad and
 	 * is not something we should try to bypass. Silent install needs device-owner
-	 * privileges Reef neither has nor should want.
+	 * privileges FlixFin neither has nor should want.
 	 *
 	 * If the downloaded APK is signed with a different key than the installed
 	 * app, Android rejects it here. That is the backstop that makes plain HTTP
@@ -281,12 +284,12 @@ object ReefUpdater {
 			val sessionId = installer.createSession(params)
 
 			installer.openSession(sessionId).use { session ->
-				session.openWrite("reef", 0, apk.length()).use { output ->
+				session.openWrite("flixfin", 0, apk.length()).use { output ->
 					apk.inputStream().use { input -> input.copyTo(output) }
 					session.fsync(output)
 				}
 
-				val intent = Intent(context, ReefUpdateReceiver::class.java)
+				val intent = Intent(context, FlixFinUpdateReceiver::class.java)
 				val flags = android.app.PendingIntent.FLAG_UPDATE_CURRENT or
 					android.app.PendingIntent.FLAG_MUTABLE
 				val pending = android.app.PendingIntent.getBroadcast(context, sessionId, intent, flags)
@@ -294,10 +297,10 @@ object ReefUpdater {
 				session.commit(pending.intentSender)
 			}
 
-			Timber.i("Reef update session $sessionId committed")
+			Timber.i("FlixFin update session $sessionId committed")
 			true
 		}.onFailure { error ->
-			Timber.e(error, "Reef update install failed")
+			Timber.e(error, "FlixFin update install failed")
 		}.getOrDefault(false)
 	}
 

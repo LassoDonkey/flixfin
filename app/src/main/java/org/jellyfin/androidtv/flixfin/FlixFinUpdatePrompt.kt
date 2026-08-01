@@ -1,4 +1,4 @@
-package org.jellyfin.androidtv.reef
+package org.jellyfin.androidtv.flixfin
 
 import android.app.Activity
 import android.app.AlertDialog
@@ -21,7 +21,7 @@ import timber.log.Timber
  *  - Never silent. The user is asked, and Android asks again.
  *  - Never blocking. A failed or slow check just doesn't show a dialog.
  */
-object ReefUpdatePrompt {
+object FlixFinUpdatePrompt {
 	/**
 	 * Checks for an update and offers it. Safe to call unconditionally.
 	 *
@@ -30,20 +30,20 @@ object ReefUpdatePrompt {
 	 */
 	fun checkAndOffer(activity: Activity, lifecycleOwner: LifecycleOwner) {
 		lifecycleOwner.lifecycleScope.launch {
-			val update = ReefUpdater.check() ?: return@launch
+			val update = FlixFinUpdater.check() ?: return@launch
 			if (activity.isFinishing || activity.isDestroyed) return@launch
 
 			// Ask about the permission before downloading 50MB over TV Wi-Fi and
 			// discovering we can't use it.
-			if (!ReefUpdater.canInstall(activity)) {
+			if (!FlixFinUpdater.canInstall(activity)) {
 				AlertDialog.Builder(activity)
 					.setTitle("Update available — ${update.versionName}")
 					.setMessage(
-						"Reef can update itself, but Android needs your permission first.\n\n" +
-							"Choose Allow, turn on the switch for Reef, then press Back."
+						"FlixFin can update itself, but Android needs your permission first.\n\n" +
+							"Choose Allow, turn on the switch for FlixFin, then press Back."
 					)
 					.setPositiveButton("Allow") { _, _ ->
-						ReefUpdater.requestInstallPermission(activity)
+						FlixFinUpdater.requestInstallPermission(activity)
 					}
 					.setNegativeButton("Not now", null)
 					.show()
@@ -53,7 +53,7 @@ object ReefUpdatePrompt {
 			val notes = update.notes.trim().takeIf { it.isNotEmpty() }
 			AlertDialog.Builder(activity)
 				.setTitle("Update available — ${update.versionName}")
-				.setMessage(notes ?: "A new version of Reef is ready to install.")
+				.setMessage(notes ?: "A new version of FlixFin is ready to install.")
 				.setPositiveButton("Update") { _, _ -> startDownload(activity, lifecycleOwner, update) }
 				.setNegativeButton("Later", null)
 				.show()
@@ -63,7 +63,7 @@ object ReefUpdatePrompt {
 	private fun startDownload(
 		activity: Activity,
 		lifecycleOwner: LifecycleOwner,
-		update: ReefUpdater.Update,
+		update: FlixFinUpdater.Update,
 	) {
 		// A 50MB download over Fire TV Wi-Fi is slow enough that silence reads as
 		// a crash. Indeterminate rather than a percentage bar, because the feed
@@ -76,18 +76,18 @@ object ReefUpdatePrompt {
 		progress.show()
 
 		lifecycleOwner.lifecycleScope.launch {
-			val apk = ReefUpdater.download(activity, update)
+			val apk = FlixFinUpdater.download(activity, update)
 			progress.dismiss()
 
 			if (apk == null) {
-				Toast.makeText(activity, "Reef update download failed", Toast.LENGTH_LONG).show()
+				Toast.makeText(activity, "FlixFin update download failed", Toast.LENGTH_LONG).show()
 				return@launch
 			}
 
-			val started = ReefUpdater.install(activity, apk)
+			val started = FlixFinUpdater.install(activity, apk)
 			if (!started) {
 				Timber.w("Install session did not start")
-				Toast.makeText(activity, "Reef could not start the install", Toast.LENGTH_LONG).show()
+				Toast.makeText(activity, "FlixFin could not start the install", Toast.LENGTH_LONG).show()
 			}
 		}
 	}

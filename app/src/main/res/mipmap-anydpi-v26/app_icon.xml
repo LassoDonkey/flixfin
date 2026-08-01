@@ -1,6 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Adaptive launcher icon, API 26+.
+
+  The foreground is a BITMAP rather than a vector drawable, which is a change
+  from the previous icon. FlixFin's mark is a clapperboard with a metal gradient
+  and a striped clapper; Android vector drawables support only linear and radial
+  gradients on simple paths, and converting this one either loses the shading or
+  produces a path list nobody can maintain. A bitmap at five densities is the
+  honest option.
+
+  The background stays a flat vector fill. Adaptive backgrounds get masked to
+  whatever shape the launcher wants and can be parallaxed, so detail there is
+  either cropped or smeared regardless.
+
+  No monochrome variant. Themed icons want a single-colour silhouette, and this
+  mark has no meaningful silhouette — flattened to one colour a clapperboard is a
+  rectangle. Android falls back to the full icon, which is better than shipping a
+  grey box.
+-->
 <adaptive-icon xmlns:android="http://schemas.android.com/apk/res/android">
     <background android:drawable="@drawable/app_icon_background" />
-    <foreground android:drawable="@drawable/app_icon_foreground" />
-
-    <monochrome android:drawable="@drawable/app_icon_foreground_monochrome" />
+    <foreground android:drawable="@mipmap/app_icon_fg" />
 </adaptive-icon>

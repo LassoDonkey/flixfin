@@ -33,7 +33,7 @@ import org.jellyfin.androidtv.auth.repository.UserRepository
 import org.jellyfin.androidtv.data.eventhandling.SocketHandler
 import org.jellyfin.androidtv.databinding.ActivityStartupBinding
 import org.jellyfin.androidtv.integration.LeanbackChannelWorker
-import org.jellyfin.androidtv.reef.ReefUpdatePrompt
+import org.jellyfin.androidtv.flixfin.FlixFinUpdatePrompt
 import org.jellyfin.androidtv.ui.background.AppBackground
 import org.jellyfin.androidtv.ui.browsing.MainActivity
 import org.jellyfin.androidtv.ui.itemhandling.ItemLauncher
@@ -102,10 +102,10 @@ class StartupActivity : FragmentActivity() {
 		// Ensure basic permissions
 		networkPermissionsRequester.launch(arrayOf(Manifest.permission.INTERNET, Manifest.permission.ACCESS_NETWORK_STATE))
 
-		// Reef self-update. Startup is the only safe moment to offer this — never
+		// FlixFin self-update. Startup is the only safe moment to offer this — never
 		// mid-playback. Fails silently and never blocks startup; a TV that is off
 		// the tailnet simply sees nothing. See docs/self-update.md.
-		ReefUpdatePrompt.checkAndOffer(this, this)
+		FlixFinUpdatePrompt.checkAndOffer(this, this)
 	}
 
 	override fun onResume() {

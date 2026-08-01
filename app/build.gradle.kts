@@ -6,7 +6,7 @@ plugins {
 }
 
 /*
- * Reef's application id.
+ * FlixFin's application id.
  *
  * Deliberately NOT the same as `namespace`. Upstream sets applicationId =
  * namespace = org.jellyfin.androidtv; we keep their namespace so the ~1500 Kotlin
@@ -14,13 +14,13 @@ plugins {
  * mergeable, but we must ship a different applicationId because:
  *
  *   - Android identifies an installed app by applicationId. Sharing theirs means
- *     Reef would replace the official Jellyfin app rather than sit beside it, and
+ *     FlixFin would replace the official Jellyfin app rather than sit beside it, and
  *     could never be installed alongside it for comparison.
  *   - Content provider authorities are derived from it below and must be unique
  *     across the whole device. Two apps claiming the same authority makes the
  *     second one fail to install with INSTALL_FAILED_CONFLICTING_PROVIDER.
  */
-val reefApplicationId = "com.leooperations.reef"
+val flixFinApplicationId = "com.leooperations.flixfin"
 
 android {
 	namespace = "org.jellyfin.androidtv"
@@ -31,7 +31,7 @@ android {
 		targetSdk = libs.versions.android.targetSdk.get().toInt()
 
 		// Release version
-		applicationId = reefApplicationId
+		applicationId = flixFinApplicationId
 		versionName = project.getVersionName()
 		versionCode = getVersionCode(versionName!!)
 	}
@@ -75,10 +75,10 @@ android {
 			proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
 
 			// Set package names used in various XML files. These MUST follow
-			// applicationId, not namespace — see the note on reefApplicationId.
-			resValue("string", "app_id", reefApplicationId)
-			resValue("string", "app_search_suggest_authority", "${reefApplicationId}.content")
-			resValue("string", "app_search_suggest_intent_data", "content://${reefApplicationId}.content/intent")
+			// applicationId, not namespace — see the note on flixFinApplicationId.
+			resValue("string", "app_id", flixFinApplicationId)
+			resValue("string", "app_search_suggest_authority", "${flixFinApplicationId}.content")
+			resValue("string", "app_search_suggest_intent_data", "content://${flixFinApplicationId}.content/intent")
 
 			// Set flavored application name
 			resValue("string", "app_name", "@string/app_name_release")
@@ -93,9 +93,9 @@ android {
 			applicationIdSuffix = ".debug"
 
 			// Set package names used in various XML files
-			resValue("string", "app_id", reefApplicationId + applicationIdSuffix)
-			resValue("string", "app_search_suggest_authority", "${reefApplicationId + applicationIdSuffix}.content")
-			resValue("string", "app_search_suggest_intent_data", "content://${reefApplicationId + applicationIdSuffix}.content/intent")
+			resValue("string", "app_id", flixFinApplicationId + applicationIdSuffix)
+			resValue("string", "app_search_suggest_authority", "${flixFinApplicationId + applicationIdSuffix}.content")
+			resValue("string", "app_search_suggest_intent_data", "content://${flixFinApplicationId + applicationIdSuffix}.content/intent")
 
 			// Set flavored application name
 			resValue("string", "app_name", "@string/app_name_debug")
@@ -116,7 +116,7 @@ android {
 	}
 }
 
-base.archivesName.set("reef-v${project.getVersionName()}")
+base.archivesName.set("flixfin-v${project.getVersionName()}")
 
 tasks.register("versionTxt") {
 	val path = layout.buildDirectory.asFile.get().resolve("version.txt")

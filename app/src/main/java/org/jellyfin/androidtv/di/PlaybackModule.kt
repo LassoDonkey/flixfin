@@ -87,7 +87,7 @@ fun Scope.createPlaybackManager() = playbackManager(androidContext()) {
 	val mediaSessionOptions = MediaSessionOptions(
 		channelId = notificationChannelId,
 		notificationId = 1,
-		iconSmall = R.drawable.app_icon_foreground,
+		iconSmall = R.drawable.app_icon_mono,
 		openIntent = pendingIntent,
 	)
 	install(media3SessionPlugin(get(), mediaSessionOptions))
