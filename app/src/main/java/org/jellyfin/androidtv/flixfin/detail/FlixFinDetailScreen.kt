@@ -33,6 +33,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.scale
+import androidx.compose.foundation.focusable
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Brush
@@ -130,6 +131,9 @@ fun FlixFinDetailScreen(
 			.fillMaxSize()
 			.background(Colors.BackgroundDeep)
 			.focusRequester(focusRequester)
+			// See the note in FlixFinHomeScreen: onKeyEvent only fires on a focused
+			// element, so without this the page renders and ignores the remote.
+			.focusable()
 			.onKeyEvent { event ->
 				if (event.type != KeyEventType.KeyDown) return@onKeyEvent false
 				when (event.key) {

@@ -22,6 +22,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.foundation.focusable
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.input.key.Key
@@ -31,7 +32,12 @@ import androidx.compose.ui.input.key.onKeyEvent
 import androidx.compose.ui.input.key.type
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.dp
+import androidx.compose.runtime.mutableStateOf
 import org.jellyfin.androidtv.flixfin.ui.FlixFinCard
+import org.jellyfin.androidtv.flixfin.ui.FlixFinRail
+import org.jellyfin.androidtv.flixfin.ui.FlixFinTopNav
+import org.jellyfin.androidtv.flixfin.ui.RailItem
+import org.jellyfin.androidtv.flixfin.ui.TopItem
 import org.jellyfin.androidtv.flixfin.ui.FlixFinHero
 import org.jellyfin.androidtv.flixfin.ui.FlixFinHeroDots
 import org.jellyfin.androidtv.flixfin.ui.FlixFinText
@@ -66,6 +72,8 @@ fun FlixFinHomeScreen(
 	home: FlixFinHome,
 	onOpen: (BaseItemDto) -> Unit,
 	imageUrl: (BaseItemDto, ImageKind) -> String?,
+	onRail: (RailItem) -> Unit,
+	onTop: (TopItem) -> Unit,
 	modifier: Modifier = Modifier,
 ) {
 	/*
@@ -77,6 +85,15 @@ fun FlixFinHomeScreen(
 	var row by remember { mutableIntStateOf(0) }
 	var index by remember(row) { mutableIntStateOf(0) }
 	var heroIndex by remember { mutableIntStateOf(0) }
+
+	/*
+	 * Three zones, matching the prototype: the content, the top section strip, and
+	 * the left rail. Held as one enum rather than as booleans so "which zone" can
+	 * only ever have one answer.
+	 */
+	var zone by remember { mutableStateOf(Zone.Content) }
+	var railIndex by remember { mutableIntStateOf(0) }
+	var topIndex by remember { mutableIntStateOf(0) }
 
 	val focusRequester = remember { FocusRequester() }
 	val listState = rememberLazyListState()
@@ -115,8 +132,58 @@ fun FlixFinHomeScreen(
 			.fillMaxSize()
 			.background(Colors.Background)
 			.focusRequester(focusRequester)
+			/*
+			 * `.focusable()` is not optional, and leaving it out is why the first
+			 * build on hardware was an unresponsive picture.
+			 *
+			 * `onKeyEvent` only fires on a FOCUSED element. Without focusable() this
+			 * Box can never take focus, so `focusRequester.requestFocus()` silently
+			 * does nothing and not one key ever reaches the handler below. There is
+			 * no error and no warning — the screen renders perfectly and ignores the
+			 * remote.
+			 *
+			 * Order matters too: focusRequester must come BEFORE focusable, or the
+			 * requester has nothing to attach to.
+			 */
+			.focusable()
 			.onKeyEvent { event ->
 				if (event.type != KeyEventType.KeyDown) return@onKeyEvent false
+
+				// --- left rail ---
+				if (zone == Zone.Rail) {
+					return@onKeyEvent when (event.key) {
+						Key.DirectionDown -> {
+							railIndex = (railIndex + 1).coerceAtMost(RailItem.entries.lastIndex); true
+						}
+						Key.DirectionUp -> { railIndex = (railIndex - 1).coerceAtLeast(0); true }
+						Key.DirectionRight -> { zone = Zone.Content; true }
+						Key.Enter, Key.DirectionCenter, Key.NumPadEnter -> {
+							onRail(RailItem.entries[railIndex]); zone = Zone.Content; true
+						}
+						else -> false
+					}
+				}
+
+				// --- top section strip ---
+				if (zone == Zone.Top) {
+					return@onKeyEvent when (event.key) {
+						Key.DirectionRight -> {
+							topIndex = (topIndex + 1).coerceAtMost(TopItem.entries.lastIndex); true
+						}
+						Key.DirectionLeft -> {
+							// Left off the first item drops into the rail rather than
+							// dead-ending, so the two nav controls reach each other.
+							if (topIndex == 0) zone = Zone.Rail else topIndex -= 1
+							true
+						}
+						Key.DirectionDown -> { zone = Zone.Content; true }
+						Key.Enter, Key.DirectionCenter, Key.NumPadEnter -> {
+							onTop(TopItem.entries[topIndex]); true
+						}
+						else -> false
+					}
+				}
+
 				when (event.key) {
 					Key.DirectionDown -> {
 						if (row < home.rows.size) row += 1
@@ -124,7 +191,8 @@ fun FlixFinHomeScreen(
 					}
 
 					Key.DirectionUp -> {
-						if (row > 0) row -= 1
+						// Up from the hero goes to the section strip above it.
+						if (row > 0) row -= 1 else zone = Zone.Top
 						true
 					}
 
@@ -139,10 +207,13 @@ fun FlixFinHomeScreen(
 					}
 
 					Key.DirectionLeft -> {
-						if (row == 0) {
-							if (heroIndex > 0) heroIndex -= 1
-						} else if (index > 0) {
-							index -= 1
+						// Left at the start of a row opens the rail, the way Prime does
+						// it, so no dedicated menu button is needed on the remote.
+						when {
+							row == 0 && heroIndex > 0 -> heroIndex -= 1
+							row == 0 -> zone = Zone.Rail
+							index > 0 -> index -= 1
+							else -> zone = Zone.Rail
 						}
 						true
 					}
@@ -159,6 +230,8 @@ fun FlixFinHomeScreen(
 			},
 	) {
 		Column(modifier = Modifier.fillMaxSize()) {
+			Spacer(Modifier.height(Dimens.SafeY + Dimens.TopNavHeight))
+
 			FlixFinHero(
 				title = heroItem?.name.orEmpty(),
 				logoUrl = heroItem?.let { imageUrl(it, ImageKind.Logo) },
@@ -192,8 +265,25 @@ fun FlixFinHomeScreen(
 				}
 			}
 		}
+
+		// Chrome sits above the content and outside the scroll, so it stays put
+		// while the page moves underneath.
+		FlixFinTopNav(
+			focusedIndex = if (zone == Zone.Top) topIndex else -1,
+			scrolled = row > 1,
+			modifier = Modifier.align(Alignment.TopStart),
+		)
+
+		FlixFinRail(
+			focusedIndex = if (zone == Zone.Rail) railIndex else -1,
+			activeIndex = 0,
+			modifier = Modifier.align(Alignment.CenterStart),
+		)
 	}
 }
+
+/** Which of the three controls currently owns the remote. */
+private enum class Zone { Content, Rail, Top }
 
 @Composable
 private fun FlixFinRowStrip(
